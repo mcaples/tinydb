@@ -4,12 +4,13 @@ Utility functions.
 
 from collections import OrderedDict, abc
 from typing import List, Iterator, TypeVar, Generic, Union, Optional
+from datetime import datetime, timezone
 
 K = TypeVar('K')
 V = TypeVar('V')
 D = TypeVar('D')
 
-__all__ = ('LRUCache', 'freeze')
+__all__ = ('LRUCache', 'freeze', 'utc_now_to_string')
 
 
 class LRUCache(abc.MutableMapping, Generic[K, V]):
@@ -136,3 +137,7 @@ def freeze(obj):
     else:
         # Don't handle all other objects
         return obj
+
+
+def utc_now_to_string():
+    return datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S%z')

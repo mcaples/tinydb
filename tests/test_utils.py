@@ -1,6 +1,7 @@
 import pytest  # type: ignore
+from freezegun import freeze_time
 
-from tinydb.utils import LRUCache, freeze, FrozenDict
+from tinydb.utils import LRUCache, freeze, FrozenDict, utc_now_to_string
 
 
 def test_lru_cache():
@@ -100,3 +101,8 @@ def test_freeze():
 
     with pytest.raises(TypeError):
         frozen[3]['a'] = 10
+
+
+@freeze_time("2020-05-16 12:34:56")
+def test_utc_now_to_string():
+    assert utc_now_to_string() == "2020-05-16T12:34:56+0000"

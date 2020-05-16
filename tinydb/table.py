@@ -17,7 +17,7 @@ from typing import (
 
 from .storages import Storage
 from .queries import Query
-from .utils import LRUCache
+from .utils import LRUCache, utc_now_to_string
 
 __all__ = ('Document', 'Table')
 
@@ -93,6 +93,8 @@ class Table:
     #: .. versionadded:: 4.0
     default_query_cache_capacity = 10
 
+    default_add_timestamp_flag = False
+
     def __init__(
         self,
         storage: Storage,
@@ -148,6 +150,10 @@ class Table:
         # First, we get the document ID for the new document
         doc_id = self._get_next_id()
 
+        if self.default_add_timestamp_flag:
+            document['created'] = utc_now_to_string()
+            document['updated'] = ''
+
         # Now, we update the table and add the document
         def updater(table: dict):
             # By calling ``dict(document)`` we convert the data we got to a
@@ -179,6 +185,10 @@ class Table:
                 # can return all document IDs later
                 doc_id = self._get_next_id()
                 doc_ids.append(doc_id)
+
+                if self.default_add_timestamp_flag:
+                    document['created'] = utc_now_to_string()
+                    document['updated'] = ''
 
                 # Convert the document to a ``dict`` (see Table.insert) and
                 # store it
@@ -302,6 +312,9 @@ class Table:
         :param doc_ids: a list of document IDs
         :returns: a list containing the updated document's ID
         """
+
+        if self.default_add_timestamp_flag:
+            fields['updated'] = utc_now_to_string()
 
         # Define the function that will perform the update
         if callable(fields):

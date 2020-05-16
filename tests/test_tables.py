@@ -1,5 +1,6 @@
 import pytest  # type: ignore
 import re
+from freezegun import freeze_time
 
 from tinydb import where
 
@@ -129,3 +130,34 @@ def test_table_repr(db):
 def test_truncate_table(db):
     db.truncate()
     assert db._get_next_id() == 1
+
+
+@freeze_time("2020-05-16 12:34:56")
+def test_add_timestamp_on_insert(db):
+    db.drop_tables()
+    db.table_class.default_add_timestamp_flag = True
+    table = db.table('table1')
+
+    table.insert({'int': 1})
+    print(table.all())
+
+    assert table.get(where('int') == 1)['created'] == "2020-05-16T12:34:56+0000"
+    assert table.get(where('int') == 1)['updated'] == ''
+
+    db.table_class.default_add_timestamp_flag = False
+
+
+@freeze_time("2020-05-16 12:34:56")
+def test_change_timestamp_on_update(db):
+    db.table_class.default_add_timestamp_flag = True
+    db.drop_tables()
+    table = db.table('table1')
+
+    table.insert({'int': 1})
+    with freeze_time("2020-05-16 13:13:13"):
+        table.update({'int': 10}, where('int') == 1)
+
+    assert table.get(where('int') == 10)['created'] == "2020-05-16T12:34:56+0000"
+    assert table.get(where('int') == 10)['updated'] == "2020-05-16T13:13:13+0000"
+
+    db.table_class.default_add_timestamp_flag = False
